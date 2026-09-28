@@ -1,0 +1,29 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+
+# LangChain core
+langchain==0.3.1
+langchain-community==0.3.1
+langchain-core==0.3.6
+
+# LLM providers (pick one, or keep both)
+langchain-openai==0.2.0
+langchain-anthropic==0.2.0
+
+# Embeddings (free, local, no API key needed)
+sentence-transformers==3.1.1
+langchain-huggingface==0.1.0
+
+# Vector store
+chromadb==0.5.3
+langchain-chroma==0.1.4
+langchain-text-splitters==0.3.0
+
+# Parsing
+pypdf==4.3.1
+python-docx==1.1.2
+
+# Env management
+python-dotenv==1.0.1
