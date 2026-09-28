@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerReady AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #3E2C22;
+    --bg-soft: #4A362A;
+    --paper: #F6F1E7;
+    --paper-line: #E3D9C4;
+    --ink: #2B2118;
+    --ink-faint: #8A7A66;
+    --stamp: #B23A2E;
+    --stamp-soft: rgba(178,58,46,0.12);
+    --highlight: #E0A83C;
+    --highlight-soft: rgba(224,168,60,0.18);
+    --check: #3F6B4F;
+    --check-soft: rgba(63,107,79,0.14);
+    --cream-text: #F1EAD8;
+    --cream-faint: #C9B79C;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 800px 500px at 90% -10%, rgba(224,168,60,0.08), transparent 60%),
+      radial-gradient(ellipse 700px 450px at 5% 30%, rgba(63,107,79,0.06), transparent 60%);
+    color: var(--cream-text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+  }
+  .wrap{
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 56px 24px 120px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom: 60px;
+  }
+  .brand-name{
+    font-family:'Space Mono', monospace;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  h1{
+    font-family:'Space Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(30px, 4.6vw, 44px);
+    line-height: 1.18;
+    margin: 0 0 18px;
+    max-width: 14ch;
+    color: var(--cream-text);
+  }
+  h1 span{ color: var(--highlight); }
+  .sub{
+    color: var(--cream-faint);
+    font-size: 16.5px;
+    max-width: 56ch;
+    margin: 0 0 44px;
+    line-height: 1.6;
+  }
+
+  /* ---- input panel (the "desk") ---- */
+  .desk{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 700px){ .desk{ grid-template-columns: 1fr; } }
+
+  .paper-field{
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+    padding: 20px 20px 16px;
+    position: relative;
+  }
+  .paper-field::before{
+    content: "";
+    position: absolute;
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border: 1px solid var(--paper-line);
+    pointer-events: none;
+    border-radius: 2px;
+  }
+  .paper-label{
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .example-link{
+    background:none;
+    border:none;
+    color: var(--stamp);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0;
+  }
+  textarea{
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    padding: 0;
+  }
+  textarea::placeholder{ color: #B3A68F; }
+
+  .analyze-btn{
+    width: 100%;
+    background: var(--highlight);
+    color: #2B2118;
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 14.5px;
+    padding: 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 60px;
+    transition: filter 0.15s ease;
+  }
+  .analyze-btn:hover{ filter: brightness(1.07); }
+  .analyze-btn:disabled{ opacity: 0.35; cursor: not-allowed; filter:none; }
+
+  /* ---- results ---- */
+  .results{ display:none; }
+  .results.show{ display:block; }
+
+  .score-row{
+    display:flex;
+    align-items:center;
+    gap: 28px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .stamp{
+    width: 128px;
+    height: 128px;
+    border: 3px solid var(--stamp);
+    border-radius: 50%;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    transform: rotate(-6deg);
+    flex-shrink: 0;
+    color: var(--stamp);
+    position: relative;
+  }
+  .stamp::before{
+    content:"";
+    position:absolute;
+    inset: 7px;
+    border: 1px dashed var(--stamp);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .stamp .num{
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+  }
+  .stamp .lbl{
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+  .score-breakdown{ flex:1; min-width: 220px; }
+  .score-breakdown h3{
+    font-family:'Space Mono', monospace;
+    font-size: 15px;
+    margin: 0 0 12px;
+    color: var(--cream-text);
+    font-weight: 700;
+  }
+  .check-item{
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    font-size: 13.5px;
+    color: var(--cream-faint);
+    margin-bottom: 7px;
+  }
+  .check-item .mark{
+    width: 15px; height:15px;
+    flex-shrink:0;
+    border-radius: 3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 10px;
+  }
+  .mark.pass{ background: var(--check-soft); color: var(--check); }
+  .mark.fail{ background: var(--stamp-soft); color: var(--stamp); }
+
+  .section-title{
+    font-family:'Space Mono', monospace;
+    font-size: 13.5px;
+    color: var(--cream-faint);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+  .pills{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 34px;
+  }
+  .pill{
+    font-size: 13px;
+    padding: 7px 13px;
+    border-radius: 5px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .pill.matched{
+    background: var(--check-soft);
+    border: 1px solid rgba(63,107,79,0.5);
+    color: var(--cream-text);
+  }
+  .pill.missing{
+    background: var(--highlight-soft);
+    border: 1px dashed rgba(224,168,60,0.7);
+    color: var(--cream-text);
+  }
+  .empty-pills{
+    color: var(--cream-faint);
+    font-size: 13.5px;
+    font-style: italic;
+  }
+
+  .suggestions{
+    background: var(--bg-soft);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .suggestion-item{
+    display:flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--cream-text);
+  }
+  .suggestion-item:last-child{ border-bottom: none; padding-bottom: 0; }
+  .suggestion-item:first-child{ padding-top: 0; }
+  .suggestion-item .box{
+    width: 16px; height:16px;
+    border: 1.5px solid var(--highlight);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .placeholder-note{
+    color: var(--cream-faint);
+    font-size: 14px;
+    padding: 30px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11" stroke="#E0A83C" stroke-width="2"/>
+      <path d="M8 13.5L11.2 16.5L18 9.5" stroke="#F1EAD8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="brand-name">CareerReady AI</span>
+  </div>
+
+  <h1>Get past <span>the scanner.</span></h1>
+  <p class="sub">Paste your resume and a job description. CareerReady checks the overlap, scores it the way an ATS would, and tells you exactly what to fix before you hit submit.</p>
+
+  <div class="desk">
+    <div class="paper-field">
+      <p class="paper-label">Your resume <button class="example-link" id="exResume" type="button">use an example</button></p>
+      <textarea id="resumeText" placeholder="Paste your resume text here..."></textarea>
+    </div>
+    <div class="paper-field">
+      <p class="paper-label">Job description <button class="example-link" id="exJD" type="button">use an example</button></p>
+      <textarea id="jdText" placeholder="Paste the job description here..."></textarea>
+    </div>
+  </div>
+
+  <button class="analyze-btn" id="analyzeBtn" disabled>Analyze fit</button>
+
+  <div class="results" id="results">
+
+    <div class="score-row">
+      <div class="stamp">
+        <span class="num" id="scoreNum">0</span>
+        <span class="lbl">ATS FIT SCORE</span>
+      </div>
+      <div class="score-breakdown">
+        <h3>Why this score</h3>
+        <div id="checkList"></div>
+      </div>
+    </div>
+
+    <p class="section-title">Skills the role asks for that you've got covered</p>
+    <div class="pills" id="matchedPills"></div>
+
+    <p class="section-title">Skills the role asks for that aren't showing up on your resume</p>
+    <div class="pills" id="missingPills"></div>
+
+    <p class="section-title">Fix these before you submit</p>
+    <div class="suggestions" id="suggestionsBox"></div>
+
+  </div>
+
+</div>
+
+<script>
+// Canonical skill -> known phrasings/synonyms
+const SKILL_TAXONOMY = {
+  "javascript": ["javascript","js","es6","ecmascript"],
+  "typescript": ["typescript","ts"],
+  "python": ["python"],
+  "sql": ["sql","mysql","postgresql","postgres","t-sql"],
+  "react": ["react","react.js","reactjs"],
+  "node.js": ["node.js","nodejs","node"],
+  "html": ["html","html5"],
+  "css": ["css","css3"],
+  "docker": ["docker","containerization","containers"],
+  "kubernetes": ["kubernetes","k8s"],
+  "aws": ["aws","amazon web services"],
+  "azure": ["azure","microsoft azure"],
+  "git": ["git","version control","github","gitlab"],
+  "ci/cd": ["ci/cd","continuous integration","continuous deployment"],
+  "machine learning": ["machine learning","ml"],
+  "data analysis": ["data analysis","data analytics"],
+  "data visualization": ["data visualization","dashboards","tableau","power bi"],
+  "excel": ["excel","microsoft excel","spreadsheets"],
+  "project management": ["project management","pmp"],
+  "agile": ["agile","scrum","kanban"],
+  "communication": ["communication","communication skills","presentation skills"],
+  "leadership": ["leadership","team lead","led a team","mentoring"],
+  "stakeholder management": ["stakeholder management","cross-functional"],
+  "figma": ["figma"],
+  "user research": ["user research","usability testing"],
+  "rest apis": ["rest api","rest apis","restful","api integration"],
+  "testing": ["testing","unit testing","qa","test automation"],
+  "linux": ["linux","unix"],
+  "statistics": ["statistics","statistical analysis"],
+  "seo": ["seo","search engine optimization"],
+};
+
+// Rule-based suggestion knowledge base
+const TIP_BANK = {
+  missingSkills: (skills) => `Add a "Skills" section that explicitly lists: ${skills.join(", ")}. ATS parsers look for exact keyword matches, not just related experience.`,
+  noEmail: "Include a clearly formatted email address near the top of the document — some ATS parsers fail to extract contact info from headers or text boxes.",
+  noPhone: "Add a phone number near your contact details. Recruiters often filter by completeness of contact info.",
+  noSkillsSection: "Add a dedicated \"Skills\" section. Skills buried only inside job descriptions are harder for ATS keyword scanning to pick up.",
+  noExperienceSection: "Add a clearly labeled \"Experience\" or \"Work Experience\" section header — ATS parsers rely on standard section titles to structure your resume.",
+  noEducationSection: "Add an \"Education\" section header, even if it's brief — missing section headers can cause parsers to misfile your history.",
+  tooShort: "Your resume looks short for ATS parsing — aim for roughly 350–800 words for a single role so there's enough content to match against.",
+  tooLong: "Your resume is on the longer side — ATS systems and recruiters both favor a tight one-to-two-page resume for most roles.",
+  strongMatch: "Your matched skills already cover most of what this role asks for — focus your summary/opening lines on the top 2–3 requirements to reinforce the match.",
+};
+
+function extractSkills(text){
+  const lower = text.toLowerCase();
+  const found = new Set();
+  Object.entries(SKILL_TAXONOMY).forEach(([canonical, variants]) => {
+    const hit = variants.some(v => {
+      const escaped = v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+      return re.test(lower);
+    });
+    if (hit) found.add(canonical);
+  });
+  return found;
+}
+
+function wordCount(text){
+  return (text.trim().match(/\S+/g) || []).length;
+}
+
+function runStructureChecks(resumeText){
+  const lower = resumeText.toLowerCase();
+  const wc = wordCount(resumeText);
+  return [
+    { id: 'email', label: 'Has an email address', pass: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(resumeText) },
+    { id: 'phone', label: 'Has a phone number', pass: /(\+?\d[\d\s().-]{8,}\d)/.test(resumeText) },
+    { id: 'skillsSection', label: 'Has a "Skills" section', pass: /\bskills\b/i.test(lower) },
+    { id: 'experienceSection', label: 'Has an "Experience" section', pass: /\b(experience|employment|work history)\b/i.test(lower) },
+    { id: 'educationSection', label: 'Has an "Education" section', pass: /\beducation\b/i.test(lower) },
+    { id: 'length', label: 'Reasonable length (350–800 words)', pass: wc >= 350 && wc <= 800 },
+  ];
+}
+
+function buildSuggestions(missing, checks, wc){
+  const tips = [];
+  if (missing.length) {
+    tips.push(TIP_BANK.missingSkills(missing.slice(0, 5)));
+  }
+  const failMap = {
+    email: TIP_BANK.noEmail,
+    phone: TIP_BANK.noPhone,
+    skillsSection: TIP_BANK.noSkillsSection,
+    experienceSection: TIP_BANK.noExperienceSection,
+    educationSection: TIP_BANK.noEducationSection,
+  };
+  checks.forEach(c => {
+    if (!c.pass && failMap[c.id]) tips.push(failMap[c.id]);
+  });
+  const lengthCheck = checks.find(c => c.id === 'length');
+  if (lengthCheck && !lengthCheck.pass) {
+    tips.push(wc < 350 ? TIP_BANK.tooShort : TIP_BANK.tooLong);
+  }
+  if (!missing.length && checks.every(c => c.pass)) {
+    tips.push(TIP_BANK.strongMatch);
+  }
+  return tips;
+}
+
+const resumeEl = document.getElementById('resumeText');
+const jdEl = document.getElementById('jdText');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const results = document.getElementById('results');
+
+function updateBtn(){
+  analyzeBtn.disabled = !(resumeEl.value.trim() && jdEl.value.trim());
+}
+resumeEl.addEventListener('input', updateBtn);
+jdEl.addEventListener('input', updateBtn);
+
+document.getElementById('exResume').addEventListener('click', () => {
+  resumeEl.value = `Jordan Lee
+jordan.lee@email.com | (555) 019-2834
+
+Experience
+Software Engineer, Northfield Systems — 2022–Present
+Built internal tools using JavaScript and React, working closely with a small cross-functional team. Used Git for version control and wrote unit tests for new features. Queried and maintained data in SQL databases.
+
+Education
+B.S. Computer Science, Riverdale State University, 2022`;
+  updateBtn();
+});
+
+document.getElementById('exJD').addEventListener('click', () => {
+  jdEl.value = `We're looking for a Frontend Developer to join our product team.
+
+Requirements:
+- 2+ years experience with JavaScript and React
+- Solid understanding of HTML/CSS and responsive design
+- Experience with REST APIs and Git-based workflows
+- Familiarity with TypeScript is a plus
+- Comfortable working in an Agile/Scrum environment
+- Strong communication skills`;
+  updateBtn();
+});
+
+analyzeBtn.addEventListener('click', () => {
+  const resumeSkills = extractSkills(resumeEl.value);
+  const jdSkills = extractSkills(jdEl.value);
+
+  const matched = [...jdSkills].filter(s => resumeSkills.has(s));
+  const missing = [...jdSkills].filter(s => !resumeSkills.has(s));
+
+  const checks = runStructureChecks(resumeEl.value);
+  const wc = wordCount(resumeEl.value);
+
+  const skillPct = jdSkills.size ? (matched.length / jdSkills.size) * 100 : 0;
+  const structurePassed = checks.filter(c => c.pass).length;
+  const structureScore = (structurePassed / checks.length) * 30;
+  const total = Math.round(skillPct * 0.7 + structureScore);
+
+  document.getElementById('scoreNum').textContent = total;
+
+  const checkList = document.getElementById('checkList');
+  checkList.innerHTML = checks.map(c => `
+    <div class="check-item">
+      <span class="mark ${c.pass ? 'pass' : 'fail'}">${c.pass ? '✓' : '✕'}</span>
+      <span>${c.label}</span>
+    </div>`).join('') + `
+    <div class="check-item">
+      <span class="mark ${skillPct >= 50 ? 'pass' : 'fail'}">${Math.round(skillPct)}%</span>
+      <span>Required skills found on your resume</span>
+    </div>`;
+
+  const matchedPills = document.getElementById('matchedPills');
+  matchedPills.innerHTML = matched.length
+    ? matched.map(s => `<span class="pill matched">${s}</span>`).join('')
+    : `<span class="empty-pills">No overlap found yet — check whether the skill wording matches how the role describes it.</span>`;
+
+  const missingPills = document.getElementById('missingPills');
+  missingPills.innerHTML = missing.length
+    ? missing.map(s => `<span class="pill missing">${s}</span>`).join('')
+    : `<span class="empty-pills">Nothing missing — your resume covers every skill this posting names.</span>`;
+
+  const tips = buildSuggestions(missing, checks, wc);
+  const suggestionsBox = document.getElementById('suggestionsBox');
+  suggestionsBox.innerHTML = tips.length
+    ? tips.map(t => `<div class="suggestion-item"><span class="box"></span><span>${t}</span></div>`).join('')
+    : `<p class="placeholder-note">Nothing to flag — this is in strong shape.</p>`;
+
+  results.classList.add('show');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+
+</body>
+</html>
