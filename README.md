@@ -1,4 +1,5 @@
 # CareerReady AI
+file:///C:/Users/Tejas/Downloads/careerready-ai.html
 
 AI-powered ATS Resume Analyzer using RAG + LangChain.
 
